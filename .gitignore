@@ -1,0 +1,10 @@
+# Local reference material / working notes (not part of the cleanroom tree)
+.notes/
+
+# Local scratch
+tmp/
+
+# Build outputs
+**/target/
+cmake-build-*/
+build/

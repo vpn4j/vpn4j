@@ -1,0 +1,31 @@
+# Build libvpn4j_native.so with bind-mounted source + output.
+#
+#   mkdir -p vpn4j-native/target
+#   USER_ID=$(id -u) GROUP_ID=$(id -g) \
+#     docker compose -f vpn4j-native/docker-compose.yml run --rm vpn4j-native
+#
+# Or: bash scripts/build-native.sh
+
+services:
+  vpn4j-native:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${VPN4J_NATIVE_IMAGE:-vpn4j-native:jdk21}
+    working_dir: /out
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-21-openjdk-amd64
+      VPN4J_NATIVE_SRC: /src
+      VPN4J_NATIVE_OUT: /out
+      VPN4J_BUILD_TESTS: ${VPN4J_BUILD_TESTS:-ON}
+      USER_ID: ${USER_ID:-}
+      GROUP_ID: ${GROUP_ID:-}
+    volumes:
+      # Source tree (read-only) — no COPY, incremental rebuilds
+      - ./:/src:ro
+      # Build products on the host
+      - ./target:/out
+    # Optional live TUN smoke (not required for default gtests):
+    #   docker compose run --rm --device /dev/net/tun --cap-add NET_ADMIN vpn4j-native
+    # devices: [/dev/net/tun]
+    # cap_add: [NET_ADMIN]
