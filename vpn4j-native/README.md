@@ -4,7 +4,7 @@ C++23 / JNI library for TUN and host I/O (`libvpn4j_native.so`).
 
 ## Ownership
 
-C++ owns TUN fd and staging. Java holds opaque `long` handles. See [docs/MEMORY.md](../docs/MEMORY.md) and [docs/JNI.md](../docs/JNI.md).
+C++ owns TUN fd and staging. Java holds opaque `long` handles across JNI.
 
 ## Build (Docker — source of truth)
 

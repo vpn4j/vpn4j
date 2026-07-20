@@ -12,6 +12,8 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransportSessionTest {
@@ -46,5 +48,27 @@ class TransportSessionTest {
         byte[] keepAlive = iSess.seal(new byte[0]);
         byte[] empty = rSess.open(keepAlive);
         assertEquals(0, empty.length);
+        assertEquals(2L, iSess.sendCounter());
+    }
+
+    @Test
+    void openRejectsWrongReceiverIndex() {
+        SecureRandom random = new SecureRandom();
+        KeyPair initiatorId = X25519.generate(random);
+        KeyPair responderId = X25519.generate(random);
+
+        NoiseHandshake initiator = new NoiseHandshake(initiatorId, responderId.publicKey(), null, random);
+        NoiseHandshake responder = new NoiseHandshake(responderId, initiatorId.publicKey(), null, random);
+        byte[] initiation = initiator.createInitiation(1);
+        responder.consumeInitiation(initiation, initiatorId.publicKey());
+        byte[] response = responder.createResponse(2);
+        TransportSession iSess = new TransportSession(initiator.consumeResponse(response));
+        TransportSession rSess = new TransportSession(responder.deriveTransportKeysAsResponder());
+
+        byte[] packet = iSess.seal(new byte[] {1});
+        // Flip receiver index in header
+        packet[4] ^= 1;
+        assertThrows(IllegalArgumentException.class, () -> rSess.open(packet));
+        assertSame(iSess.keys().remoteIndex(), rSess.keys().localIndex());
     }
 }

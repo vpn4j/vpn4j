@@ -11,6 +11,7 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CookieCheckerTest {
@@ -36,6 +37,27 @@ class CookieCheckerTest {
         CookieChecker.writeMac2(msg, cookie);
         assertTrue(CookieChecker.verifyMac2(msg, cookie));
         assertFalse(CookieChecker.verifyMac2(msg, new byte[16]));
+        assertFalse(CookieChecker.verifyMac2(msg, null));
         assertArrayEquals(cookie, checker.cookieFor(src, 1_000L));
+    }
+
+    @Test
+    void openCookieRejectsBadInputAndMac2NullClears() {
+        SecureRandom random = new SecureRandom();
+        Key local = X25519.generate(random).publicKey();
+        byte[] mac1 = new byte[16];
+        assertThrows(IllegalArgumentException.class, () -> CookieChecker.openCookie(local, new byte[8], mac1));
+
+        byte[] msg = new byte[MessageSizes.HANDSHAKE_INITIATION];
+        msg[0] = 1;
+        CookieChecker.writeMac2(msg, null);
+        byte[] mac2 = Arrays.copyOfRange(msg, msg.length - 16, msg.length);
+        assertArrayEquals(new byte[16], mac2);
+
+        CookieChecker checker = new CookieChecker(local, random);
+        byte[] a = checker.cookieFor(new byte[] {1, 2, 3, 4}, 0L);
+        checker.rotate(1L);
+        byte[] b = checker.cookieFor(new byte[] {1, 2, 3, 4}, 1L);
+        assertFalse(Arrays.equals(a, b));
     }
 }

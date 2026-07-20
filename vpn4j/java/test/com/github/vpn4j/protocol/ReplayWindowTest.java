@@ -35,4 +35,15 @@ class ReplayWindowTest {
         assertTrue(window.tryAccept(ReplayWindow.BITS_TOTAL + 10L));
         assertFalse(window.tryAccept(10L));
     }
+
+    @Test
+    void rejectsNegativeAndClearsOnHugeJump() {
+        ReplayWindow window = new ReplayWindow();
+        assertFalse(window.tryAccept(-1L));
+        assertTrue(window.tryAccept(100L));
+        assertTrue(window.tryAccept(100L + ReplayWindow.BITS_TOTAL));
+        assertEquals(100L + ReplayWindow.BITS_TOTAL, window.latest());
+        // prior counters wiped by clear on huge jump
+        assertFalse(window.tryAccept(100L));
+    }
 }

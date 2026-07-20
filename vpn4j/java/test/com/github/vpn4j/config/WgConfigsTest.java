@@ -14,6 +14,7 @@ import java.security.SecureRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WgConfigsTest {
 
@@ -44,9 +45,7 @@ class WgConfigsTest {
             assertEquals(2, engine.peers().size());
             assertNotNull(engine.peer(p1.publicKey()));
             assertNotNull(engine.peer(p2.publicKey()));
-            assertEquals(self.publicKey(), engine.peer(p1.publicKey()).peerPublicKey() == null
-                    ? null
-                    : self.publicKey()); // identity is internal; just ensure peers present
+            assertTrue(engine.peer(p1.publicKey()).peerPublicKey().equalsConstantTime(p1.publicKey()));
         }
     }
 

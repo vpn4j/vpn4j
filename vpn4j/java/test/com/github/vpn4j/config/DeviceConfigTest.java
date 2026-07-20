@@ -31,4 +31,14 @@ class DeviceConfigTest {
         assertEquals("127.0.0.1", cfg.tcpTunnelHost());
         assertEquals(443, cfg.tcpTunnelPort());
     }
+
+    @Test
+    void rejectsBadListenPortAndEmptyName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DeviceConfig.builder().listenPort(70000).build());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DeviceConfig.builder().interfaceName("").build());
+    }
 }

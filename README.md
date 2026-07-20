@@ -12,7 +12,7 @@ Same JVM/JNI contracts as [tensor4j](https://github.com/tensor4j/tensor4j):
 - **Opaque `long` handles** across JNI — no field-unpacking on hot paths
 - **Fail-fast** native load — no silent Java fallback when native is required
 - **Newest C++** only for native (`vpn4j-native`, C++23)
-- **Clean-room** vs `.notes/wireguard-linux` — study, do not paste
+- **Clean-room** — implement from the public WireGuard protocol; do not paste upstream sources
 
 See [docs/](docs/).
 
@@ -60,7 +60,3 @@ java -jar $JAR up --config peer.conf
 export VPN4J_NATIVE_LIBRARY=$PWD/../vpn4j-native/target/lib/libvpn4j_native.so
 sudo -E java -jar $JAR up --config peer.conf --tun
 ```
-
-## Reference material
-
-Local only (gitignored): `.notes/wireguard-linux` — deep clone of the native Linux WireGuard tree.

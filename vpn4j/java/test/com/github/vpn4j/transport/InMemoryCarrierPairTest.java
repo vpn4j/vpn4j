@@ -44,7 +44,7 @@ class InMemoryCarrierPairTest {
     }
 
     @Test
-    void closedRejectsIo() {
+    void closedRejectsIo() throws IOException {
         InMemoryCarrierPair pair = new InMemoryCarrierPair();
         PacketCarrier a = pair.sideA();
         a.close();

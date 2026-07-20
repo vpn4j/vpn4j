@@ -29,14 +29,15 @@ public final class HChaCha20 {
         }
         int[] x = state.clone();
         for (int i = 0; i < 10; i++) {
+            // Diagonal indices follow Bernstein/libsodium (RFC 8439 §2.1 typo).
             quarter(x, 0, 4, 8, 12);
             quarter(x, 1, 5, 9, 13);
             quarter(x, 2, 6, 10, 14);
             quarter(x, 3, 7, 11, 15);
             quarter(x, 0, 5, 10, 15);
             quarter(x, 1, 6, 11, 12);
-            quarter(x, 2, 7, 12, 13);
-            quarter(x, 3, 4, 13, 14);
+            quarter(x, 2, 7, 8, 13);
+            quarter(x, 3, 4, 9, 14);
         }
         // HChaCha20 output: x0..x3 || x12..x15 (no final add)
         byte[] out = new byte[32];

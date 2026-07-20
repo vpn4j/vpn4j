@@ -3,9 +3,12 @@ package com.github.vpn4j.crypto;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class Blake2sTest {
 
@@ -27,6 +30,29 @@ class Blake2sTest {
     @Test
     void constructionHashLength() {
         assertEquals(37, ProtocolConstruction.CONSTRUCTION_LEN);
+    }
+
+    @Test
+    void keyedMacDeterministicAndLengthSensitive() {
+        // BLAKE2s mixes outLen into the parameter block — 16 vs 32 are not prefixes.
+        byte[] key = new byte[32];
+        for (int i = 0; i < 32; i++) {
+            key[i] = (byte) i;
+        }
+        byte[] mac16 = Blake2s.mac(key, new byte[0], 16);
+        byte[] mac32 = Blake2s.mac(key, new byte[0], 32);
+        assertEquals(16, mac16.length);
+        assertEquals(32, mac32.length);
+        assertArrayEquals(mac16, Blake2s.mac(key, new byte[0], 16));
+        assertFalse(Arrays.equals(mac16, Arrays.copyOf(mac32, 16)));
+        assertFalse(Arrays.equals(mac16, new byte[16]));
+    }
+
+    @Test
+    void rejectsBadOutLen() {
+        assertThrows(IllegalArgumentException.class, () -> new Blake2s(0));
+        assertThrows(IllegalArgumentException.class, () -> new Blake2s(33));
+        assertThrows(IllegalArgumentException.class, () -> Blake2s.mac(new byte[33], new byte[0], 16));
     }
 
     private static byte[] hex(String s) {

@@ -43,4 +43,13 @@ class AllowedIpsTableTest {
         pkt[19] = 50;
         assertEquals("lan", table.lookupDestination(pkt, pkt.length));
     }
+
+    @Test
+    void defaultRouteAndShortPacket() throws Exception {
+        AllowedIpsTable<String> table = new AllowedIpsTable<>();
+        table.insert("0.0.0.0/0", "default");
+        assertEquals("default", table.lookup(InetAddress.getByName("8.8.8.8")));
+        assertNull(table.lookupDestination(new byte[10], 10));
+        assertNull(table.lookupDestination(null, 0));
+    }
 }

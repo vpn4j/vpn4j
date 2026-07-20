@@ -112,18 +112,16 @@ class NoiseHandshakeTest {
         assertThrows(IllegalStateException.class, () -> initiator.deriveTransportKeysAsResponder());
 
         responder.consumeInitiation(initiation, initiatorId.publicKey());
-        assertThrows(IllegalStateException.class, () -> responder.consumeResponse(new byte[MessageSizes.HANDSHAKE_RESPONSE]));
+        assertThrows(
+                IllegalStateException.class,
+                () -> responder.consumeResponse(new byte[MessageSizes.HANDSHAKE_RESPONSE]));
 
-        byte[] response = responder.createResponse(0x22222222);
-        // wrong echo index
-        response[8] ^= 1;
-        // mac1 must be recomputed after tampering would fail first — rebuild clean response then patch after mac
         NoiseHandshake initiator2 = new NoiseHandshake(initiatorId, responderId.publicKey(), null, random);
         NoiseHandshake responder2 = new NoiseHandshake(responderId, initiatorId.publicKey(), null, random);
         byte[] initiation2 = initiator2.createInitiation(0x11111111);
         responder2.consumeInitiation(initiation2, initiatorId.publicKey());
         byte[] response2 = responder2.createResponse(0x22222222);
-        // Corrupt echo index then leave mac1 invalid → mac1 invalid
+        // Corrupt echo index — mac1 no longer matches
         response2[8] ^= 1;
         assertThrows(IllegalArgumentException.class, () -> initiator2.consumeResponse(response2));
     }

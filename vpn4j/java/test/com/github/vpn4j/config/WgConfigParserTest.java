@@ -155,4 +155,23 @@ class WgConfigParserTest {
                 IllegalArgumentException.class,
                 () -> PeerConfig.builder(pub).persistentKeepaliveSeconds(-1).build());
     }
+
+    @Test
+    void parseFileRoundTrip(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
+        SecureRandom random = new SecureRandom();
+        KeyPair self = X25519.generate(random);
+        KeyPair peer = X25519.generate(random);
+        String conf = ""
+                + "[Interface]\n"
+                + "PrivateKey = " + Keys.toBase64(self.privateKey()) + "\n"
+                + "ListenPort = 9\n"
+                + "[Peer]\n"
+                + "PublicKey = " + Keys.toBase64(peer.publicKey()) + "\n"
+                + "AllowedIPs = 10.0.0.0/8\n";
+        java.nio.file.Path file = dir.resolve("peer.conf");
+        java.nio.file.Files.writeString(file, conf);
+        WgConfig cfg = WgConfigParser.parseFile(file);
+        assertEquals(9, cfg.listenPort());
+        assertEquals(1, cfg.peers().size());
+    }
 }
