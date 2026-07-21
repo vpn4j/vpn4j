@@ -31,4 +31,17 @@ class NativeBootstrapTest {
         assertThrows(NativeLoadException.class, NativeBootstrap::load);
         assertFalse(NativeBootstrap.isLoaded());
     }
+
+    @Test
+    void loadLibraryPathFailsWhenUnset() {
+        System.clearProperty("vpn4j.native.library");
+        // Assumes VPN4J_NATIVE_LIBRARY is unset in the test environment.
+        if (System.getenv("VPN4J_NATIVE_LIBRARY") != null
+                && !System.getenv("VPN4J_NATIVE_LIBRARY").isEmpty()) {
+            return; // skip — cannot clear process env portably
+        }
+        NativeLoadException ex = assertThrows(NativeLoadException.class, NativeBootstrap::load);
+        assertTrue(ex.getMessage().contains("Failed to load"));
+        assertFalse(NativeBootstrap.isLoaded());
+    }
 }

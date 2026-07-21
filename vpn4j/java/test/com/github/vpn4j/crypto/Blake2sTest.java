@@ -55,6 +55,21 @@ class Blake2sTest {
         assertThrows(IllegalArgumentException.class, () -> Blake2s.mac(new byte[33], new byte[0], 16));
     }
 
+    @Test
+    void multiBlockUpdateMatchesOneShot() {
+        byte[] input = new byte[200];
+        for (int i = 0; i < input.length; i++) {
+            input[i] = (byte) i;
+        }
+        byte[] oneShot = Blake2s.hash32(input);
+        Blake2s streaming = new Blake2s(32);
+        streaming.update(input, 0, 70);
+        streaming.update(input, 70, 80);
+        streaming.update(input, 150, 50);
+        assertArrayEquals(oneShot, streaming.digest());
+        assertEquals(16, Blake2s.hash(input, 16).length);
+    }
+
     private static byte[] hex(String s) {
         byte[] out = new byte[s.length() / 2];
         for (int i = 0; i < out.length; i++) {

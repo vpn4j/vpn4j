@@ -23,6 +23,8 @@
     <junit.version>5.10.2</junit.version>
     <maven.surefire.version>3.2.5</maven.surefire.version>
     <jacoco.version>0.8.12</jacoco.version>
+    <!-- Bump as coverage improves; native TUN / JNI load paths are excluded. -->
+    <jacoco.line.ratio>0.90</jacoco.line.ratio>
   </properties>
 
   <dependencyManagement>
@@ -71,8 +73,60 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco.version}</version>
+          <configuration>
+            <excludes>
+              <!-- Real /dev/net/tun + JNI symbols — deferred from unit tests. -->
+              <exclude>com/github/vpn4j/device/NativeTunPort.class</exclude>
+              <exclude>com/github/vpn4j/device/TunDevice.class</exclude>
+              <exclude>com/github/vpn4j/device/TunDevice$*.class</exclude>
+              <exclude>com/github/vpn4j/nativeapi/TunNative.class</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+            <execution>
+              <id>prepare-agent</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>report</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <rule>
+                    <element>BUNDLE</element>
+                    <limits>
+                      <limit>
+                        <counter>LINE</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>${jacoco.line.ratio}</minimum>
+                      </limit>
+                    </limits>
+                  </rule>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
 </project>

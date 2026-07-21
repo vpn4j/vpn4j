@@ -59,5 +59,10 @@ class CookieCheckerTest {
         checker.rotate(1L);
         byte[] b = checker.cookieFor(new byte[] {1, 2, 3, 4}, 1L);
         assertFalse(Arrays.equals(a, b));
+
+        byte[] before = checker.cookieFor(new byte[] {9, 9, 9, 9}, 10_000L);
+        checker.maybeRotate(10_000L + CookieChecker.SECRET_MAX_AGE_MS);
+        byte[] after = checker.cookieFor(new byte[] {9, 9, 9, 9}, 10_000L + CookieChecker.SECRET_MAX_AGE_MS);
+        assertFalse(Arrays.equals(before, after));
     }
 }

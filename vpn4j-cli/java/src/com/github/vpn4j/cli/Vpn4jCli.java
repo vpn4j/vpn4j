@@ -4,7 +4,6 @@ import com.github.vpn4j.config.PeerConfig;
 import com.github.vpn4j.config.WgConfig;
 import com.github.vpn4j.config.WgConfigParser;
 import com.github.vpn4j.config.WgConfigs;
-import com.github.vpn4j.crypto.Key;
 import com.github.vpn4j.crypto.KeyPair;
 import com.github.vpn4j.crypto.Keys;
 import com.github.vpn4j.crypto.X25519;
@@ -31,33 +30,41 @@ import java.util.Arrays;
 public final class Vpn4jCli {
 
     public static void main(String[] args) throws Exception {
+        int code = run(args);
+        if (code != 0) {
+            System.exit(code);
+        }
+    }
+
+    /** Dispatch command; returns process exit code (0 = ok). */
+    static int run(String[] args) throws Exception {
         String cmd = args.length == 0 ? "help" : args[0];
         switch (cmd) {
             case "smoke":
                 smoke();
-                break;
+                return 0;
             case "genkey":
                 genkey();
-                break;
+                return 0;
             case "pubkey":
                 pubkey();
-                break;
+                return 0;
             case "up":
-                up(args);
-                break;
+                up(args, upMaxPumps());
+                return 0;
             case "help":
             case "-h":
             case "--help":
                 help();
-                break;
+                return 0;
             default:
                 System.err.println("unknown command: " + cmd);
                 help();
-                System.exit(2);
+                return 2;
         }
     }
 
-    private static void help() {
+    static void help() {
         System.out.println("usage:");
         System.out.println("  vpn4j-cli smoke");
         System.out.println("  vpn4j-cli genkey");
@@ -81,6 +88,24 @@ public final class Vpn4jCli {
     }
 
     static void up(String[] args) throws Exception {
+        up(args, upMaxPumps());
+    }
+
+    /** {@code -Dvpn4j.cli.up.maxPumps=N} bounds pumps for tests; unset means forever. */
+    static int upMaxPumps() {
+        String prop = System.getProperty("vpn4j.cli.up.maxPumps");
+        if (prop == null || prop.isEmpty()) {
+            return -1;
+        }
+        return Integer.parseInt(prop);
+    }
+
+    /**
+     * Bring up from wg-style config.
+     *
+     * @param maxPumps number of pump iterations; negative means forever (CLI default)
+     */
+    static void up(String[] args, int maxPumps) throws Exception {
         Path configPath = null;
         boolean useTun = false;
         boolean underLoad = false;
@@ -129,11 +154,21 @@ public final class Vpn4jCli {
                 }
             }
             System.out.println("pumping (Ctrl+C to stop)");
-            Runtime.getRuntime().addShutdownHook(new Thread(engine::close));
-            while (true) {
-                engine.pumpOnce();
-                Thread.sleep(10L);
+            if (maxPumps < 0) {
+                Runtime.getRuntime().addShutdownHook(new Thread(engine::close));
             }
+            int pumps = 0;
+            while (maxPumps < 0 || pumps < maxPumps) {
+                engine.pumpOnce();
+                pumps++;
+                try {
+                    Thread.sleep(10L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            engine.close();
         } finally {
             tun.close();
             if (nativeTun != null) {
@@ -147,11 +182,10 @@ public final class Vpn4jCli {
         KeyPair aId = X25519.generate(random);
         KeyPair bId = X25519.generate(random);
 
-        int portB = 51821;
-        int portA = 51820;
-
-        try (UdpCarrier carrierA = UdpCarrier.bind(portA);
-                UdpCarrier carrierB = UdpCarrier.bind(portB)) {
+        try (UdpCarrier carrierA = UdpCarrier.bind(0);
+                UdpCarrier carrierB = UdpCarrier.bind(0)) {
+            int portA = ((InetSocketAddress) carrierA.channel().getLocalAddress()).getPort();
+            int portB = ((InetSocketAddress) carrierB.channel().getLocalAddress()).getPort();
             MemoryTunPort tunA = new MemoryTunPort();
             MemoryTunPort tunB = new MemoryTunPort();
 

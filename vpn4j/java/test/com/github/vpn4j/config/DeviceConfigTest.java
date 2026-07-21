@@ -41,4 +41,14 @@ class DeviceConfigTest {
                 IllegalArgumentException.class,
                 () -> DeviceConfig.builder().interfaceName("").build());
     }
+
+    @Test
+    void rejectsNullTransportModeAndBadTcpPort() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DeviceConfig.builder().transportMode(null).build());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DeviceConfig.builder().tcpTunnel("127.0.0.1", 0).build());
+    }
 }

@@ -33,6 +33,7 @@ class TcpTunnelCarrierTest {
             byte[] got = new byte[n];
             System.arraycopy(dst, 0, got, 0, n);
             assertArrayEquals(payload, got);
+            org.junit.jupiter.api.Assertions.assertNotNull(client.lastRemote());
         } finally {
             server.close();
             acceptor.join(2000);

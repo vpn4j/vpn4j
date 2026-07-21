@@ -31,8 +31,11 @@ JDK 21+ (set `JAVA_HOME`). C++23 for native (GCC 13+ / Clang 17+).
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 cd vpn4j-pom
-mvn install
+mvn verify
 ```
+
+JaCoCo HTML reports: `vpn4j/target/site/jacoco/`, `vpn4j-cli/target/site/jacoco/`.
+Line coverage gate: 90% (`mvn verify`; native TUN/JNI classes excluded).
 
 Native library (Docker compose + bind mounts — same idea as tensor4j):
 

@@ -157,6 +157,14 @@ class WgConfigParserTest {
     }
 
     @Test
+    void peerBuilderHelper() {
+        Key pub = X25519.generate(new SecureRandom()).publicKey();
+        PeerConfig peer = WgConfig.peerBuilder(pub).addAllowedIp("0.0.0.0/0").build();
+        assertTrue(peer.publicKey().equalsConstantTime(pub));
+        assertEquals(1, peer.allowedIps().size());
+    }
+
+    @Test
     void parseFileRoundTrip(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
         SecureRandom random = new SecureRandom();
         KeyPair self = X25519.generate(random);

@@ -49,5 +49,6 @@ class KeyTest {
         assertNotEquals(ka, kc);
         assertFalse(ka.equalsConstantTime(null));
         assertFalse(ka.equals("nope"));
+        assertTrue(ka.equals(ka)); // same reference branch
     }
 }

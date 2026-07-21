@@ -24,7 +24,11 @@ class DeviceTest {
         peerPub[0] = 1;
         device.addPeer(PeerConfig.builder(new Key(peerPub)).addAllowedIp("10.0.0.2/32").build());
         assertEquals(1, device.peers().size());
+        assertEquals(TransportMode.TUN, device.transportMode());
+        assertEquals(identity, device.identity());
+        assertEquals(null, device.tun());
         device.close();
+        device.close(); // idempotent
         PeerConfig late = PeerConfig.builder(new Key(peerPub)).build();
         assertThrows(IllegalStateException.class, new AddPeer(device, late));
     }
